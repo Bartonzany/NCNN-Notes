@@ -31,32 +31,40 @@ int BatchNorm::load_param(const ParamDict& pd)
 }
 
 int BatchNorm::load_model(const ModelBin& mb)
-{
+{   
+    // slope数据
     slope_data = mb.load(channels, 1);
     if (slope_data.empty())
         return -100;
 
+    // mean数据
     mean_data = mb.load(channels, 1);
     if (mean_data.empty())
         return -100;
 
+    // variance数据
     var_data = mb.load(channels, 1);
     if (var_data.empty())
         return -100;
 
+
+    // bias数据
     bias_data = mb.load(channels, 1);
     if (bias_data.empty())
         return -100;
 
+    // 创建矩阵
     a_data.create(channels);
     if (a_data.empty())
         return -100;
+    // 创建矩阵
     b_data.create(channels);
     if (b_data.empty())
         return -100;
 
     for (int i = 0; i < channels; i++)
     {
+        // sqrt variance
         float sqrt_var = sqrtf(var_data[i] + eps);
         if (sqrt_var == 0.f)
             sqrt_var = 0.0001f; // sanitize divide by zero
@@ -67,20 +75,24 @@ int BatchNorm::load_model(const ModelBin& mb)
     return 0;
 }
 
+// 前向传播
 int BatchNorm::forward_inplace(Mat& bottom_top_blob, const Option& opt) const
 {
     // a = bias - slope * mean / sqrt(var)
     // b = slope / sqrt(var)
     // value = b * value + a
 
+    // 自下而上的blob维度
     int dims = bottom_top_blob.dims;
 
     if (dims == 1)
     {
         int w = bottom_top_blob.w;
 
+        // 自下而上blob的指针
         float* ptr = bottom_top_blob;
-
+    
+        // 更新blob的值
         #pragma omp parallel for num_threads(opt.num_threads)
         for (int i = 0; i < w; i++)
         {
@@ -90,6 +102,7 @@ int BatchNorm::forward_inplace(Mat& bottom_top_blob, const Option& opt) const
 
     if (dims == 2)
     {
+        // 自下而上blob的size
         int w = bottom_top_blob.w;
         int h = bottom_top_blob.h;
 

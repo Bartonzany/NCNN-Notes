@@ -35,6 +35,9 @@ int ArgMax::forward(const Mat& bottom_blob, Mat& top_blob, const Option& opt) co
 {
     int size = bottom_blob.total();
 
+    // 默认(topk, 1)
+    // 如果是top-1，获取最大值及序号
+    // 否则，只获取序号
     if (out_max_val)
         top_blob.create(topk, 2, 4u, opt.blob_allocator);
     else
@@ -42,17 +45,20 @@ int ArgMax::forward(const Mat& bottom_blob, Mat& top_blob, const Option& opt) co
     if (top_blob.empty())
         return -100;
 
+    // 输入的指针
     const float* ptr = bottom_blob;
 
     // partial sort topk with index
     // optional value
     std::vector<std::pair<float, int> > vec;
     vec.resize(size);
+    // 绑定对应索引
     for (int i = 0; i < size; i++)
     {
         vec[i] = std::make_pair(ptr[i], i);
     }
 
+    // 做一个排序
     std::partial_sort(vec.begin(), vec.begin() + topk, vec.end(),
                       std::greater<std::pair<float, int> >());
 
@@ -60,6 +66,7 @@ int ArgMax::forward(const Mat& bottom_blob, Mat& top_blob, const Option& opt) co
     if (out_max_val)
     {
         float* valptr = outptr + topk;
+        // 获取值及序号
         for (int i = 0; i < topk; i++)
         {
             outptr[i] = vec[i].first;
@@ -67,7 +74,8 @@ int ArgMax::forward(const Mat& bottom_blob, Mat& top_blob, const Option& opt) co
         }
     }
     else
-    {
+    {   
+        // 获取序列
         for (int i = 0; i < topk; i++)
         {
             outptr[i] = vec[i].second;

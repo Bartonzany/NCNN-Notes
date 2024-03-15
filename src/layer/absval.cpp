@@ -35,7 +35,8 @@ int AbsVal::forward_inplace(Mat& bottom_top_blob, const Option& opt) const
         float* ptr = bottom_top_blob.channel(q);
 
         for (int i = 0; i < size; i++)
-        {
+        {   
+            // 遍历每一个元素，对每个元素取绝对值
             if (ptr[i] < 0)
                 ptr[i] = -ptr[i];
         }

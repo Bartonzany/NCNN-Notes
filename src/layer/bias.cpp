@@ -38,14 +38,17 @@ int Bias::load_model(const ModelBin& mb)
     return 0;
 }
 
+// 在位前向传播
 int Bias::forward_inplace(Mat& bottom_top_blob, const Option& opt) const
 {
+    // 自下而上blob的size
     int w = bottom_top_blob.w;
     int h = bottom_top_blob.h;
     int d = bottom_top_blob.d;
     int channels = bottom_top_blob.c;
     int size = w * h * d;
 
+    // 前向操作就是一个加上bias的过程
     #pragma omp parallel for num_threads(opt.num_threads)
     for (int q = 0; q < channels; q++)
     {
