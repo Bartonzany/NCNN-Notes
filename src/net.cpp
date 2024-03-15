@@ -1418,29 +1418,40 @@ int Net::load_param(const DataReader& dr)
         layer->name = std::string(layer_name);
         //         NCNN_LOGE("new layer %d %s", i, layer_name);
 
+        // layer的输入
         layer->bottoms.resize(bottom_count);
+        // 解析layer的输入
         for (int j = 0; j < bottom_count; j++)
         {
             char bottom_name[256];
             SCAN_VALUE("%255s", bottom_name)
 
             int bottom_blob_index = find_blob_index_by_name(bottom_name);
+            // 如果没有查找到bottom_name对应的blob
+            // 将向blobs数组中插入一个名为bottom_name的blob
             if (bottom_blob_index == -1)
-            {
+            {   
+                // 设置第blob_index个blob的参数
                 Blob& blob = d->blobs[blob_index];
-
+                
                 bottom_blob_index = blob_index;
 
+                // 设置blob的name
                 blob.name = std::string(bottom_name);
                 //                 NCNN_LOGE("new blob %s", bottom_name);
 
+                // 更新全局的blob索引
                 blob_index++;
             }
 
+            // 设置当前blob的参数
             Blob& blob = d->blobs[bottom_blob_index];
 
+            // 使用当前blob记录数据传输关系
+            // 第i层以当前blob为输入
             blob.consumer = i;
 
+            // 第i层layer的第j个输入
             layer->bottoms[j] = bottom_blob_index;
         }
 
@@ -1465,6 +1476,7 @@ int Net::load_param(const DataReader& dr)
         int layer_support_vulkan = layer->support_vulkan;
 
         // layer specific params
+        // 解析blob名后面跟随的特定参数字典pd
         int pdlr = pd.load_param(dr);
         if (pdlr != 0)
         {
