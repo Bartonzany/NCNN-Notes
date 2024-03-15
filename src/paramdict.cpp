@@ -41,10 +41,10 @@ public:
         int type;
         union
         {
-            int i;
-            float f;
+            int i;   // 是否已经被载入：1表示已载入
+            float f; // 单个值可能为整形也有可能为浮点型
         };
-        Mat v;
+        Mat v; // 还有可能是数组
     } params[NCNN_MAX_PARAM_COUNT];
 };
 
@@ -274,7 +274,8 @@ int ParamDict::load_param(const DataReader& dr)
                 NCNN_LOGE("ParamDict read array length failed");
                 return -1;
             }
-
+            
+            // 创建数组：就是一个Mat
             d->params[id].v.create(len);
 
             for (int j = 0; j < len; j++)
@@ -287,15 +288,19 @@ int ParamDict::load_param(const DataReader& dr)
                     return -1;
                 }
 
+                // 是否为浮点型：看解析的字符串中是否存在'.'或'e'
+                // 小数点计数法和科学计数法
                 bool is_float = vstr_is_float(vstr);
 
                 if (is_float)
                 {
+                    // vstr赋值给params[id].v[j]
                     float* ptr = d->params[id].v;
                     ptr[j] = vstr_to_float(vstr);
                 }
                 else
                 {
+                    // vstr赋值给params[id].v[j]
                     int* ptr = d->params[id].v;
                     nscan = sscanf(vstr, "%d", &ptr[j]);
                     if (nscan != 1)
@@ -310,7 +315,9 @@ int ParamDict::load_param(const DataReader& dr)
         }
         else
         {
+            // 不是数组
             char vstr[16];
+            // 直接将字符串赋值给vstr
             int nscan = dr.scan("%15s", vstr);
             if (nscan != 1)
             {
@@ -320,6 +327,7 @@ int ParamDict::load_param(const DataReader& dr)
 
             bool is_float = vstr_is_float(vstr);
 
+            // 将字符串中的值赋给参数字典
             if (is_float)
             {
                 d->params[id].f = vstr_to_float(vstr);

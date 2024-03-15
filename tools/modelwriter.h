@@ -557,6 +557,7 @@ int ModelWriter::fprintf_param_float_array(int id, const ncnn::Mat& m, FILE* pp)
     return 0;
 }
 
+// 将 sz 对齐到 n 的倍数
 static inline size_t alignSize(size_t sz, int n)
 {
     return (sz + n - 1) & -n;

@@ -1398,10 +1398,12 @@ int Net::load_param(const DataReader& dr)
         {
             layer = create_layer_cpu(layer_type);
         }
+        // layer_type不是默认类型
         if (!layer)
         {
             layer = create_custom_layer(layer_type);
         }
+        // 如果自定义layer中也不存在当前类型layer
         if (!layer)
         {
             NCNN_LOGE("layer %s not exists or registered", layer_type);
@@ -1430,10 +1432,10 @@ int Net::load_param(const DataReader& dr)
             // 如果没有查找到bottom_name对应的blob
             // 将向blobs数组中插入一个名为bottom_name的blob
             if (bottom_blob_index == -1)
-            {   
+            {
                 // 设置第blob_index个blob的参数
                 Blob& blob = d->blobs[blob_index];
-                
+
                 bottom_blob_index = blob_index;
 
                 // 设置blob的name
@@ -1898,12 +1900,16 @@ int Net::load_model(const DataReader& dr)
     }
 #endif // NCNN_VULKAN
 
+    // 从二进制文件读取
     ModelBinFromDataReader mb(dr);
+    // 遍历所有的层
     for (int i = 0; i < layer_count; i++)
-    {
+    {       
+        // 读取第i层
         Layer* layer = d->layers[i];
 
         //Here we found inconsistent content in the parameter file.
+        // 如果第i层不存在
         if (!layer)
         {
             NCNN_LOGE("load_model error at layer %d, parameter file has inconsistent content.", i);
@@ -1911,6 +1917,7 @@ int Net::load_model(const DataReader& dr)
             break;
         }
 
+        // 载入模型参数
         int lret = layer->load_model(mb);
         if (lret != 0)
         {
@@ -1925,6 +1932,7 @@ int Net::load_model(const DataReader& dr)
 
         Option opt1 = get_masked_option(opt, layer->featmask);
 
+        // 从opt处创建网络的pipline
         int cret = layer->create_pipeline(opt1);
         if (cret != 0)
         {
@@ -2386,6 +2394,7 @@ public:
     {
     }
     const Net* net;
+    // blob的mat
     std::vector<Mat> blob_mats;
     Option opt;
 
@@ -2528,6 +2537,7 @@ void Extractor::set_staging_vkallocator(VkAllocator* allocator)
 #if NCNN_STRING
 int Extractor::input(const char* blob_name, const Mat& in)
 {
+    // 获取输入模块对应index
     int blob_index = d->net->find_blob_index_by_name(blob_name);
     if (blob_index == -1)
     {
@@ -2541,6 +2551,7 @@ int Extractor::input(const char* blob_name, const Mat& in)
         return -1;
     }
 
+    // 调用直接用index的设置input方法
     return input(blob_index, in);
 }
 
@@ -2573,6 +2584,7 @@ int Extractor::input(int blob_index, const Mat& in)
     return 0;
 }
 
+// 提取特征
 int Extractor::extract(int blob_index, Mat& feat, int type)
 {
     if (blob_index < 0 || blob_index >= (int)d->blob_mats.size())
@@ -2586,8 +2598,10 @@ int Extractor::extract(int blob_index, Mat& feat, int type)
 
     int ret = 0;
 
+    // 如果输出blob为空
     if (d->blob_mats[blob_index].dims == 0)
-    {
+    {   
+        // 查找输出blob对应的生产者
         int layer_index = d->net->blobs()[blob_index].producer;
 
         // use local allocator
@@ -2687,15 +2701,18 @@ int Extractor::extract(int blob_index, Mat& feat, int type)
         {
             ret = d->net->d->forward_layer(layer_index, d->blob_mats, d->opt);
         }
-#else
+#else   
+        // 前向推理
         ret = d->net->d->forward_layer(layer_index, d->blob_mats, d->opt);
 #endif // NCNN_VULKAN
     }
 
+    // 输出特征
     feat = d->blob_mats[blob_index];
 
     if (d->opt.use_packing_layout && (type == 0) && feat.elempack != 1)
     {
+        // 对特征进行unpack
         Mat bottom_blob_unpacked;
         convert_packing(feat, bottom_blob_unpacked, 1, d->opt);
         feat = bottom_blob_unpacked;
@@ -2769,6 +2786,7 @@ int Extractor::input(const char* blob_name, const VkMat& in)
     return input(blob_index, in);
 }
 
+// 将输入string类型name转换成对应的索引
 int Extractor::extract(const char* blob_name, VkMat& feat, VkCompute& cmd)
 {
     int blob_index = d->net->find_blob_index_by_name(blob_name);

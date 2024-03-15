@@ -219,23 +219,27 @@ public:
 #if NCNN_STRING
     // set input by blob name
     // return 0 if success
+    // 设置网络输入：字符串layer名
     int input(const char* blob_name, const Mat& in);
 
     // get result by blob name
     // return 0 if success
     // type = 0, default
     // type = 1, do not convert fp16/bf16 or / and packing
+    // 设置提取器的输入：得到对应输出
     int extract(const char* blob_name, Mat& feat, int type = 0);
 #endif // NCNN_STRING
 
     // set input by blob index
     // return 0 if success
+    // 设置int类型blob索引及输入
     int input(int blob_index, const Mat& in);
 
     // get result by blob index
     // return 0 if success
     // type = 0, default
     // type = 1, do not convert fp16/bf16 or / and packing
+    // 设置int类型blob索引及输出
     int extract(int blob_index, Mat& feat, int type = 0);
 
 #if NCNN_VULKAN
@@ -275,6 +279,7 @@ public:
 #endif // NCNN_VULKAN
 
 protected:
+    // 对外提供create_extractor接口
     friend Extractor Net::create_extractor() const;
     Extractor(const Net* net, size_t blob_count);
 

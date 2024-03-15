@@ -41,6 +41,8 @@ public:
 };
 
 class ModelBinFromDataReaderPrivate;
+
+// 载入模型参数到一个Mat中
 class NCNN_EXPORT ModelBinFromDataReader : public ModelBin
 {
 public:

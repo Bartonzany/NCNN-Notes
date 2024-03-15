@@ -199,6 +199,7 @@ int layer_to_index(const char* type)
     return -1;
 }
 
+// 根据字符串layer类型创建layer
 Layer* create_layer(const char* type)
 {
     int index = layer_to_index(type);
@@ -491,6 +492,7 @@ Layer* create_layer_naive(int index)
 
 Layer* create_layer_cpu(int index)
 {
+    // index不能超过索引范围
     if (index < 0 || index >= layer_registry_entry_count)
         return 0;
 
@@ -559,7 +561,9 @@ Layer* create_layer_cpu(int index)
     if (!layer_creator)
         return 0;
 
+    // 构造layer
     Layer* layer = layer_creator(0);
+    // 设置layer的类型index
     layer->typeindex = index;
     return layer;
 }
