@@ -45,6 +45,7 @@ public:
 
 public:
     // option can be changed before loading
+    // 在载入之前，可以通过opt更改网络的一些设置
     Option opt;
 
 #if NCNN_VULKAN
@@ -60,11 +61,14 @@ public:
 #if NCNN_STRING
     // register custom layer or overwrite built-in layer by layer type name
     // return 0 if success
+    // 注册自定义层：通过string类型名
     int register_custom_layer(const char* type, layer_creator_func creator, layer_destroyer_func destroyer = 0, void* userdata = 0);
+    // 通过类型查找对应layer索引
     virtual int custom_layer_to_index(const char* type);
 #endif // NCNN_STRING
     // register custom layer or overwrite built-in layer by layer type
     // return 0 if success
+    // 注册自定义层，通过int类型layer索引
     int register_custom_layer(int index, layer_creator_func creator, layer_destroyer_func destroyer = 0, void* userdata = 0);
 
 #if NCNN_STRING
@@ -90,7 +94,9 @@ public:
 
     // load network weight data from model file
     // return 0 if success
+    // 从file指针中载入模型
     int load_model(FILE* fp);
+    // 从二进制文件中载入模型
     int load_model(const char* modelpath);
 #endif // NCNN_STDIO
 
@@ -104,6 +110,7 @@ public:
     // so external memory should be retained when used
     // memory pointer must be 32-bit aligned
     // return bytes consumed
+    // 外部内存载入网络权重
     int load_model(const unsigned char* mem);
 
 #if NCNN_PLATFORM_API
@@ -124,9 +131,11 @@ public:
 #endif // NCNN_PLATFORM_API
 
     // unload network structure and weight data
+    // 清空网络结构
     void clear();
 
     // construct an Extractor from network
+    // 从网络构建一个执行器
     Extractor create_extractor() const;
 
     // get input/output indexes/names
@@ -144,13 +153,16 @@ public:
     std::vector<Layer*>& mutable_layers();
 
 protected:
+    // 外部Extractor接口
     friend class Extractor;
 #if NCNN_STRING
     int find_blob_index_by_name(const char* name) const;
     int find_layer_index_by_name(const char* name) const;
+    // 通过类型查找对应layer索引
     virtual Layer* create_custom_layer(const char* type);
     virtual Layer* create_overwrite_builtin_layer(const char* type);
 #endif // NCNN_STRING
+    // 通过index创建layer
     virtual Layer* create_custom_layer(int index);
     virtual Layer* create_overwrite_builtin_layer(int typeindex);
 
