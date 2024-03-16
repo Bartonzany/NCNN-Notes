@@ -50,6 +50,7 @@ signed char float32_to_int8(float value)
 
 int Cast::forward(const Mat& bottom_blob, Mat& top_blob, const Option& opt) const
 {
+    // 不需要进行类型转换
     if (type_from == type_to)
     {
         top_blob = bottom_blob;
@@ -86,6 +87,7 @@ int Cast::forward(const Mat& bottom_blob, Mat& top_blob, const Option& opt) cons
         out_elemsize = 2 * elempack;
     }
 
+    // 为输出分配内存
     if (dims == 1)
     {
         top_blob.create(w, out_elemsize, elempack, opt.blob_allocator);

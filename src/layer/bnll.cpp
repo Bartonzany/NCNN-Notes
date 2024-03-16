@@ -22,6 +22,7 @@ BNLL::BNLL()
     support_inplace = true;
 }
 
+//softplus函数
 int BNLL::forward_inplace(Mat& bottom_top_blob, const Option& opt) const
 {
     int w = bottom_top_blob.w;
@@ -37,7 +38,7 @@ int BNLL::forward_inplace(Mat& bottom_top_blob, const Option& opt) const
         for (int i = 0; i < size; i++)
         {
             if (ptr[i] > 0)
-                ptr[i] = ptr[i] + logf(1.f + expf(-ptr[i]));
+                ptr[i] = ptr[i] + logf(1.f + expf(-ptr[i])); // 在某些场景下更好地处理输入值为负数的情况, x+log(1+e^(-x)
             else
                 ptr[i] = logf(1.f + expf(ptr[i]));
         }

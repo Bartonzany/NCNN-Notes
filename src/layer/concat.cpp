@@ -29,17 +29,22 @@ int Concat::load_param(const ParamDict& pd)
     return 0;
 }
 
+// 前向传播：数据拼接
 int Concat::forward(const std::vector<Mat>& bottom_blobs, std::vector<Mat>& top_blobs, const Option& opt) const
 {
+    // 输入的blobs维度
     int dims = bottom_blobs[0].dims;
+    // 每个blob的元素大小
     size_t elemsize = bottom_blobs[0].elemsize;
     int positive_axis = axis < 0 ? dims + axis : axis;
 
+    // 如果是一维的
     if (dims == 1) // positive_axis == 0
     {
         // concat vector
         // total length
         int top_w = 0;
+        // 计算拼接后向量大小
         for (size_t b = 0; b < bottom_blobs.size(); b++)
         {
             const Mat& bottom_blob = bottom_blobs[b];
@@ -51,6 +56,7 @@ int Concat::forward(const std::vector<Mat>& bottom_blobs, std::vector<Mat>& top_
         if (top_blob.empty())
             return -100;
 
+        // 进行concat操作：将输入的数据memcopy到输出
         unsigned char* outptr = top_blob;
         for (size_t b = 0; b < bottom_blobs.size(); b++)
         {
@@ -65,12 +71,15 @@ int Concat::forward(const std::vector<Mat>& bottom_blobs, std::vector<Mat>& top_
         }
     }
 
+    // 如果输入blob为二维，设置concat的轴向为height方向
+    // 保持width不变，对所有mat进行拼接
     if (dims == 2 && positive_axis == 0)
     {
         // concat image
         int w = bottom_blobs[0].w;
 
         // total height
+        // 计算拼接后height长度
         int top_h = 0;
         for (size_t b = 0; b < bottom_blobs.size(); b++)
         {
@@ -83,6 +92,7 @@ int Concat::forward(const std::vector<Mat>& bottom_blobs, std::vector<Mat>& top_
         if (top_blob.empty())
             return -100;
 
+        // 使用memcpy的方式将输入blobs数据拷贝到对应concat之后mat中
         unsigned char* outptr = top_blob;
         for (size_t b = 0; b < bottom_blobs.size(); b++)
         {
@@ -97,6 +107,7 @@ int Concat::forward(const std::vector<Mat>& bottom_blobs, std::vector<Mat>& top_
         }
     }
 
+    // 如果从y轴方向进行concat：和上面类似，沿着width方向展开
     if (dims == 2 && positive_axis == 1)
     {
         // interleave image row
@@ -131,6 +142,7 @@ int Concat::forward(const std::vector<Mat>& bottom_blobs, std::vector<Mat>& top_
         }
     }
 
+    // 如果维度为3，沿着channel方向进行拼接
     if ((dims == 3 || dims == 4) && positive_axis == 0)
     {
         // concat dim
@@ -139,6 +151,7 @@ int Concat::forward(const std::vector<Mat>& bottom_blobs, std::vector<Mat>& top_
         int d = bottom_blobs[0].d;
 
         // total channels
+        // 计算拼接后总的channel数目
         int top_channels = 0;
         for (size_t b = 0; b < bottom_blobs.size(); b++)
         {
@@ -169,6 +182,7 @@ int Concat::forward(const std::vector<Mat>& bottom_blobs, std::vector<Mat>& top_
         }
     }
 
+    // 沿着height方向展开
     if ((dims == 3 && positive_axis == 1) || (dims == 4 && positive_axis == 2))
     {
         // interleave dim height
@@ -177,6 +191,7 @@ int Concat::forward(const std::vector<Mat>& bottom_blobs, std::vector<Mat>& top_
         int channels = bottom_blobs[0].c;
 
         // total height
+        // 计算拼接后总的height长度
         int top_h = 0;
         for (size_t b = 0; b < bottom_blobs.size(); b++)
         {
@@ -213,6 +228,7 @@ int Concat::forward(const std::vector<Mat>& bottom_blobs, std::vector<Mat>& top_
         }
     }
 
+    // 沿着width方向展开
     if ((dims == 3 && positive_axis == 2) || (dims == 4 && positive_axis == 3))
     {
         // interleave dim width

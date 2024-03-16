@@ -45,6 +45,7 @@ int Clip::forward_inplace(Mat& bottom_top_blob, const Option& opt) const
     {
         float* ptr = bottom_top_blob.channel(q);
 
+        // 对输入进行截断操作
         for (int i = 0; i < size; i++)
         {
             if (ptr[i] < min)

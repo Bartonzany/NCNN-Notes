@@ -48,7 +48,7 @@ int Dropout::forward_inplace(Mat& bottom_top_blob, const Option& opt) const
 
         for (int i = 0; i < size; i++)
         {
-            ptr[i] = ptr[i] * scale;
+            ptr[i] = ptr[i] * scale; // ncnn里面Dropout实现，实际上就是给权重乘以一个因子scale
         }
     }
 

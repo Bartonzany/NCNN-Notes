@@ -45,7 +45,7 @@ int ELU::forward_inplace(Mat& bottom_top_blob, const Option& opt) const
         for (int i = 0; i < size; i++)
         {
             if (ptr[i] < 0.f)
-                ptr[i] = alpha * (expf(ptr[i]) - 1.f);
+                ptr[i] = alpha * (expf(ptr[i]) - 1.f); // ncnn里面ELU实现，实际上就是对输入进行了一个激活函数的变换
         }
     }
 

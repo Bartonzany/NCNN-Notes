@@ -60,6 +60,7 @@ static inline float intersection_area(const BBoxRect& a, const BBoxRect& b)
     return inter_width * inter_height;
 }
 
+//按照置信度对检测到的boundingbox排序，ncnn采用的是快速排序法
 template<typename T>
 static void qsort_descent_inplace(std::vector<T>& datas, std::vector<float>& scores, int left, int right)
 {
@@ -102,6 +103,7 @@ static void qsort_descent_inplace(std::vector<T>& datas, std::vector<float>& sco
     qsort_descent_inplace(datas, scores, 0, static_cast<int>(scores.size() - 1));
 }
 
+// 根据框与框之间的交并比（IOU）对检测结果进行过滤
 static void nms_sorted_bboxes(const std::vector<BBoxRect>& bboxes, std::vector<size_t>& picked, float nms_threshold)
 {
     picked.clear();
@@ -141,6 +143,7 @@ static void nms_sorted_bboxes(const std::vector<BBoxRect>& bboxes, std::vector<s
     }
 }
 
+// 解析输出位置、置信度、先验框对应blob，然后做NMS处理，得到最终输出结果
 int DetectionOutput::forward(const std::vector<Mat>& bottom_blobs, std::vector<Mat>& top_blobs, const Option& opt) const
 {
     const Mat& location = bottom_blobs[0];
