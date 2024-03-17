@@ -1632,7 +1632,7 @@ void quantize_to_int8(const Mat& src, Mat& dst, const Mat& scale_data, const Opt
     Layer* quantize = create_layer(LayerType::Quantize);
 
     ParamDict pd;
-    pd.set(0, scale_data.w);
+    pd.set(0, scale_data.w); // 设置scale参数
 
     quantize->load_param(pd);
 

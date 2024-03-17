@@ -70,7 +70,7 @@ int Dequantize::forward(const Mat& bottom_blob, Mat& top_blob, const Option& opt
                 #pragma omp parallel for num_threads(opt.num_threads)
                 for (int i = 0; i < w; i++)
                 {
-                    ptr[i] = intptr[i] * scale;
+                    ptr[i] = intptr[i] * scale; // 乘scale加bias
                 }
             }
             else if (bias_data_size == 1)
@@ -80,7 +80,7 @@ int Dequantize::forward(const Mat& bottom_blob, Mat& top_blob, const Option& opt
                 #pragma omp parallel for num_threads(opt.num_threads)
                 for (int i = 0; i < w; i++)
                 {
-                    ptr[i] = intptr[i] * scale + bias;
+                    ptr[i] = intptr[i] * scale + bias; // 乘scale加bias
                 }
             }
             else

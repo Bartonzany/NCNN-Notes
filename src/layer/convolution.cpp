@@ -42,7 +42,7 @@ int Convolution::load_param(const ParamDict& pd)
     pad_value = pd.get(18, 0.f);
     bias_term = pd.get(5, 0);
     weight_data_size = pd.get(6, 0);
-    int8_scale_term = pd.get(8, 0);
+    int8_scale_term = pd.get(8, 0); // int8开关
     activation_type = pd.get(9, 0);
     activation_params = pd.get(10, Mat());
 
@@ -83,7 +83,7 @@ int Convolution::load_model(const ModelBin& mb)
     }
 
 #if NCNN_INT8
-    if (int8_scale_term)
+    if (int8_scale_term)  // 一旦从.param文件中读到了int_scale_term，就可以从.bin文件中读到scale值
     {
         weight_data_int8_scales = mb.load(num_output, 1);
         bottom_blob_int8_scales = mb.load(1, 1);
@@ -97,6 +97,7 @@ int Convolution::load_model(const ModelBin& mb)
 
 #if NCNN_INT8
     // runtime quantize the weight data
+    // 创建Conv Layer时，一次性将权重量化好
     if (weight_data.elemsize == (size_t)4u && int8_scale_term)
     {
         const int maxk = kernel_w * kernel_h;

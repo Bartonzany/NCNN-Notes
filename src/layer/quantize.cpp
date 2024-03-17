@@ -68,7 +68,7 @@ int Quantize::forward(const Mat& bottom_blob, Mat& top_blob, const Option& opt) 
             #pragma omp parallel for num_threads(opt.num_threads)
             for (int i = 0; i < w; i++)
             {
-                outptr[i] = float2int8(ptr[i] * scale);
+                outptr[i] = float2int8(ptr[i] * scale); // 所有数据乘以scale，然后截断成int8
             }
         }
         else
@@ -100,7 +100,7 @@ int Quantize::forward(const Mat& bottom_blob, Mat& top_blob, const Option& opt) 
 
             for (int j = 0; j < w; j++)
             {
-                outptr0[j] = float2int8(ptr0[j] * scale);
+                outptr0[j] = float2int8(ptr0[j] * scale); // 所有数据乘以scale，然后截断成int8
             }
         }
     }
@@ -126,7 +126,7 @@ int Quantize::forward(const Mat& bottom_blob, Mat& top_blob, const Option& opt) 
 
             for (int i = 0; i < size; i++)
             {
-                outptr[i] = float2int8(ptr[i] * scale);
+                outptr[i] = float2int8(ptr[i] * scale); // 所有数据乘以scale，然后截断成int8
             }
         }
     }

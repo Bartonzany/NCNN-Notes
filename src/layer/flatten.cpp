@@ -33,7 +33,7 @@ int Flatten::forward(const Mat& bottom_blob, Mat& top_blob, const Option& opt) c
     size_t elemsize = bottom_blob.elemsize;
     int size = w * h * d;
 
-    top_blob.create(size * channels, elemsize, opt.blob_allocator);
+    top_blob.create(size * channels, elemsize, opt.blob_allocator); // 输出特征向量的长度为输入特征图的大小乘以通道数，即size * channels
     if (top_blob.empty())
         return -100;
 

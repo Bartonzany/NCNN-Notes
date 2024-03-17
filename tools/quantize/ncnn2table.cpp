@@ -258,7 +258,7 @@ int QuantNet::quantize_KL()
     const int conv_bottom_blob_count = (int)conv_bottom_blobs.size();
     const int image_count = (int)listspaths[0].size();
 
-    const int num_histogram_bins = 2048;
+    const int num_histogram_bins = 2048; // 默认Po有2048个bins，即原始统计直方图每一个bin的长度interval = max_abs_value/2048
 
     std::vector<ncnn::UnlockedPoolAllocator> blob_allocators(quantize_num_threads);
     std::vector<ncnn::UnlockedPoolAllocator> workspace_allocators(quantize_num_threads);
@@ -272,7 +272,8 @@ int QuantNet::quantize_KL()
         if (layer->type == "Convolution")
         {
             const ncnn::Convolution* convolution = (const ncnn::Convolution*)layer;
-
+            
+            // 获取卷积层的参数
             const int num_output = convolution->num_output;
             const int kernel_w = convolution->kernel_w;
             const int kernel_h = convolution->kernel_h;
@@ -281,7 +282,7 @@ int QuantNet::quantize_KL()
             const int stride_w = convolution->stride_w;
             const int stride_h = convolution->stride_h;
 
-            const int weight_data_size_output = convolution->weight_data_size / num_output;
+            const int weight_data_size_output = convolution->weight_data_size / num_output; // 将总的权重数据大小除以卷积层的输出通道数，得到每个卷积核的权重数据大小
 
             // int8 winograd F43 needs weight data to use 6bit quantization
             // TODO proper condition for winograd 3x3 int8
@@ -292,22 +293,24 @@ int QuantNet::quantize_KL()
             weight_scales[i].create(num_output);
 
             for (int n = 0; n < num_output; n++)
-            {
+            {   
+                // 第n个weight卷积核的权重数据
                 const ncnn::Mat weight_data_n = convolution->weight_data.range(weight_data_size_output * n, weight_data_size_output);
 
                 float absmax = 0.f;
                 for (int k = 0; k < weight_data_size_output; k++)
-                {
+                {   
+                    // 遍历卷积输出第k个通道，找到max(|x|)
                     absmax = std::max(absmax, (float)fabs(weight_data_n[k]));
                 }
 
                 if (quant_6bit)
                 {
-                    weight_scales[i][n] = 31 / absmax;
+                    weight_scales[i][n] = 31 / absmax;  // 对于某层卷积，每个卷积核的量化权重为(2^5-1)/absmax
                 }
                 else
                 {
-                    weight_scales[i][n] = 127 / absmax;
+                    weight_scales[i][n] = 127 / absmax; // 对于某层卷积，每个卷积核的量化权重为(2^7-1)/absmax
                 }
             }
         }
@@ -535,24 +538,26 @@ int QuantNet::quantize_KL()
         int target_threshold = target_bin;
         float min_kl_divergence = FLT_MAX;
 
-        for (int threshold = target_bin; threshold < num_histogram_bins; threshold++)
+        for (int threshold = target_bin; threshold < num_histogram_bins; threshold++) // 阈值从128开始找，直到2048
         {
             const float kl_eps = 0.0001f;
 
+            // 阈值截断
             std::vector<float> clip_distribution(threshold, kl_eps);
             {
                 for (int j = 0; j < threshold; j++)
                 {
-                    clip_distribution[j] += stat.histogram_normed[j];
+                    clip_distribution[j] += stat.histogram_normed[j];  // 没达到阈值前，直接将原始直方图的值赋给clip_distribution
                 }
                 for (int j = threshold; j < num_histogram_bins; j++)
                 {
-                    clip_distribution[threshold - 1] += stat.histogram_normed[j];
+                    clip_distribution[threshold - 1] += stat.histogram_normed[j]; // 达到阈值后，将原始直方图的值累加到clip_distribution的最后一个bin
                 }
             }
 
-            const float num_per_bin = (float)threshold / target_bin;
+            const float num_per_bin = (float)threshold / target_bin; // 每个bin的长度
 
+            // 量化分布，类似双线性插值原理
             std::vector<float> quantize_distribution(target_bin, 0.f);
             {
                 {
@@ -574,10 +579,12 @@ int QuantNet::quantize_KL()
                     quantize_distribution[0] /= right_lower + right_scale;
                 }
                 for (int j = 1; j < target_bin - 1; j++)
-                {
-                    const float start = j * num_per_bin;
+                {      
+                    // 计算出该bin对应的插值的左右边界
+                    const float start = j * num_per_bin; 
                     const float end = (j + 1) * num_per_bin;
 
+                    // 通过左右边界与整数的差值，计算出实际插值的边界权重left_scale和right_scale
                     const int left_upper = (int)ceil(start);
                     const float left_scale = left_upper - start;
 
@@ -621,6 +628,7 @@ int QuantNet::quantize_KL()
                 }
             }
 
+            // 扩展分布,128->2048
             std::vector<float> expand_distribution(threshold, kl_eps);
             {
                 {
@@ -694,7 +702,7 @@ int QuantNet::quantize_KL()
             }
         }
 
-        stat.threshold = (target_threshold + 0.5f) * stat.absmax / num_histogram_bins;
+        stat.threshold = (target_threshold + 0.5f) * stat.absmax / num_histogram_bins; // 阈值为（最佳阈值+0.5）*max_abs_value/2048
         float scale = 127 / stat.threshold;
 
         bottom_blob_scales[i].create(1);

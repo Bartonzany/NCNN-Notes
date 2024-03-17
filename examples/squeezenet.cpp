@@ -46,12 +46,12 @@ static int detect_squeezenet(const cv::Mat& bgr, std::vector<float>& cls_scores)
     ex.input("data", in);
 
     ncnn::Mat out;
-    ex.extract("prob", out);
+    ex.extract("prob", out); // 提取网络输出
 
-    cls_scores.resize(out.w);
+    cls_scores.resize(out.w); // 设置容器的大小
     for (int j = 0; j < out.w; j++)
     {
-        cls_scores[j] = out[j];
+        cls_scores[j] = out[j]; // 放入容器
     }
 
     return 0;
@@ -61,15 +61,15 @@ static int print_topk(const std::vector<float>& cls_scores, int topk)
 {
     // partial sort topk with index
     int size = cls_scores.size();
-    std::vector<std::pair<float, int> > vec;
+    std::vector<std::pair<float, int> > vec; // 声明一个pair容器
     vec.resize(size);
     for (int i = 0; i < size; i++)
     {
-        vec[i] = std::make_pair(cls_scores[i], i);
+        vec[i] = std::make_pair(cls_scores[i], i); // 向容器内写入数据
     }
 
-    std::partial_sort(vec.begin(), vec.begin() + topk, vec.end(),
-                      std::greater<std::pair<float, int> >());
+    std::partial_sort(vec.begin(), vec.begin() + topk, vec.end(), // 部分排序算法，只要topk的 // 返回一个当前vector容器中起始元素的迭代器
+                      std::greater<std::pair<float, int> >());    // greator，降序排列，应该是使用第一个float
 
     // print topk and score
     for (int i = 0; i < topk; i++)
@@ -100,9 +100,9 @@ int main(int argc, char** argv)
     }
 
     std::vector<float> cls_scores;
-    detect_squeezenet(m, cls_scores);
+    detect_squeezenet(m, cls_scores); // 加载模型，推理，将推理结果放入cls_scores
 
-    print_topk(cls_scores, 3);
+    print_topk(cls_scores, 3); // 打印前三高的分数
 
     return 0;
 }
